@@ -404,6 +404,7 @@ export interface Layout {
     height: number;
     width: number;
     hovermode: 'closest' | 'x' | 'y' | 'x unified' | 'y unified' | false;
+    spikedistance: number;
     hoverdistance: number;
     hoverlabel: Partial<HoverLabel>;
     calendar: Calendar;
