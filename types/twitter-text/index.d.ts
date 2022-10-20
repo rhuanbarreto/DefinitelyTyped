@@ -57,8 +57,15 @@ export function extractCashtags(text: string): string[];
 export function extractCashtagsWithIndices(text: string): CashtagWithIndices[];
 export function extractEntitiesWithIndices(text: string): EntityWithIndices[];
 
-export function modifyIndicesFromUnicodeToUTF16<I>(i: I): I;
-export function modifyIndicesFromUTF16ToUnicode<I>(i: I): I;
+/**
+ * Modifies (in-place) entity indices meant for Unicode text for use with UTF-16 text.
+ */
+export function modifyIndicesFromUnicodeToUTF16(text: string, entities: EntityWithIndices[]): void;
+
+/**
+ * Modifies (in-place) entity indices meant for UTF-16 text for use with Unicode text.
+ */
+export function modifyIndicesFromUTF16ToUnicode(text: string, entities: EntityWithIndices[]): void;
 
 export interface UrlEntity {
     url: string;
@@ -133,11 +140,13 @@ export interface ParseTweetOptions {
     scale?: number | undefined;
     defaultWeight?: number | undefined;
     transformedURLLength?: number | undefined;
-    ranges?: Array<{
-        start: number;
-        end: number;
-        weight: number;
-    }> | undefined;
+    ranges?:
+        | Array<{
+              start: number;
+              end: number;
+              weight: number;
+          }>
+        | undefined;
     emojiParsingEnabled?: boolean | undefined;
 }
 
@@ -153,3 +162,83 @@ export interface ParsedTweet {
 
 export function parseTweet(text: string, options?: ParseTweetOptions): ParsedTweet;
 export function standardizeIndices(text: string, startIndex: number, endIndex: number): [number, number];
+
+export const regexen: {
+    astralLetterAndMarks: RegExp;
+    astralNumerals: RegExp;
+    atSigns: RegExp;
+    bmpLetterAndMarks: RegExp;
+    bmpNumerals: RegExp;
+    cashtag: RegExp;
+    codePoint: RegExp;
+    cyrillicLettersAndMarks: RegExp;
+    endHashtagMatch: RegExp;
+    endMentionMatch: RegExp;
+    extractUrl: RegExp;
+    hashSigns: RegExp;
+    hashtagAlpha: RegExp;
+    hashtagAlphaNumeric: RegExp;
+    hashtagBoundary: RegExp;
+    hashtagSpecialChars: RegExp;
+    invalidChars: RegExp;
+    invalidCharsGroup: RegExp;
+    invalidDomainChars: RegExp;
+    invalidUrlWithoutProtocolPrecedingChars: RegExp;
+    latinAccentChars: RegExp;
+    nonBmpCodePairs: RegExp;
+    punct: RegExp;
+    rtlChars: RegExp;
+    spaces: RegExp;
+    spacesGroup: RegExp;
+    urlHasHttps: RegExp;
+    urlHasProtocol: RegExp;
+    validAsciiDomain: RegExp;
+    validateUrlAuthority: RegExp;
+    validateUrlDecOctet: RegExp;
+    validateUrlDomain: RegExp;
+    validateUrlDomainSegment: RegExp;
+    validateUrlDomainTld: RegExp;
+    validateUrlFragment: RegExp;
+    validateUrlHost: RegExp;
+    validateUrlIp: RegExp;
+    validateUrlIpv4: RegExp;
+    validateUrlIpv6: RegExp;
+    validateUrlPath: RegExp;
+    validateUrlPchar: RegExp;
+    validateUrlPctEncoded: RegExp;
+    validateUrlPort: RegExp;
+    validateUrlQuery: RegExp;
+    validateUrlScheme: RegExp;
+    validateUrlSubDelims: RegExp;
+    validateUrlSubDomainSegment: RegExp;
+    validateUrlUnencoded: RegExp;
+    validateUrlUnicodeAuthority: RegExp;
+    validateUrlUnicodeDomain: RegExp;
+    validateUrlUnicodeDomainSegment: RegExp;
+    validateUrlUnicodeDomainTld: RegExp;
+    validateUrlUnicodeHost: RegExp;
+    validateUrlUnicodeSubDomainSegment: RegExp;
+    validateUrlUnreserved: RegExp;
+    validateUrlUserinfo: RegExp;
+    validCashtag: RegExp;
+    validCCTLD: RegExp;
+    validDomain: RegExp;
+    validDomainChars: RegExp;
+    validDomainName: RegExp;
+    validGeneralUrlPathChars: RegExp;
+    validGTLD: RegExp;
+    validHashtag: RegExp;
+    validMentionOrList: RegExp;
+    validMentionPrecedingChars: RegExp;
+    validPortNumber: RegExp;
+    validPunycode: RegExp;
+    validReply: RegExp;
+    validSubdomain: RegExp;
+    validTcoUrl: RegExp;
+    validUrlBalancedParens: RegExp;
+    validUrlPath: RegExp;
+    validUrlPathEndingChars: RegExp;
+    validUrlPrecedingChars: RegExp;
+    validUrlQueryChars: RegExp;
+    validUrlQueryEndingChar: RegExp;
+};

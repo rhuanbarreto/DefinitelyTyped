@@ -19,8 +19,8 @@ function isCashtagEntity(e: twitter.EntityWithIndices): e is twitter.CashtagWith
     return 'cashtag' in e;
 }
 
-for (let e of entities) {
-    e = twitter.modifyIndicesFromUnicodeToUTF16(e);
+twitter.modifyIndicesFromUnicodeToUTF16(text, entities);
+for (const e of entities) {
     if (isHashtagEntity(e)) {
         console.log('hashtag: ', e.hashtag);
     } else if (isUrlEntity(e)) {
@@ -64,3 +64,5 @@ const tweetWithOptions: twitter.ParsedTweet = twitter.parseTweet('foo', {
     emojiParsingEnabled: true,
 });
 const [start, end]: [number, number] = twitter.standardizeIndices('hello', 0, 3);
+
+const isValidReply = twitter.regexen.validReply.test('@twitter');

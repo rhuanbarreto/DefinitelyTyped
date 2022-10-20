@@ -113,6 +113,14 @@ declare namespace stripe {
             clientSecret: string,
             options?: ConfirmPaymentIntentWithoutElementsOptions,
         ): Promise<PaymentIntentResponse>;
+        confirmSofortPayment(
+            clientSecret: string,
+            options?: ConfirmSofortPaymentOptions
+        ): Promise<PaymentIntentResponse>;
+        confirmAuBecsDebitPayment(
+            clientSecret: string,
+            options?: ConfirmSofortPaymentOptions
+        ): Promise<PaymentIntentResponse>;
     }
 
     type StripeRedirectResponse = never | {
@@ -761,6 +769,20 @@ declare namespace stripe {
         } | undefined;
     }
 
+    interface ConfirmSofortPaymentOptions extends ConfirmPaymentIntentOptions {
+        /**
+         * Either the id of an existing PaymentMethod, or an object containing
+         * data to create a PaymentMethod with.
+         */
+        payment_method?:
+            string |
+            {
+                sofort?: {
+                    country?: string
+                }
+            };
+    }
+
     interface ConfirmCardSetupData {
         /*
          * Pass an object to confirm using data collected by a card or
@@ -960,7 +982,7 @@ declare namespace stripe {
             locale?: string | undefined;
         }
 
-        type elementsType = 'card' | 'cardNumber' | 'cardExpiry' | 'cardCvc' | 'postalCode' | 'paymentRequestButton' | 'iban' | 'idealBank';
+        type elementsType = 'card' | 'cardNumber' | 'cardExpiry' | 'cardCvc' | 'postalCode' | 'paymentRequestButton' | 'iban' | 'idealBank' | 'auBankAccount';
         interface Elements {
             create(type: elementsType, options?: ElementsOptions): Element;
             getElement(type: elementsType): Element | null;

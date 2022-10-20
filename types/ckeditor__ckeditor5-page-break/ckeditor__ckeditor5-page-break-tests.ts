@@ -1,4 +1,4 @@
-import { Editor } from '@ckeditor/ckeditor5-core';
+import { Command, Editor } from '@ckeditor/ckeditor5-core';
 import { PageBreak, PageBreakUI, PageBreakEditing } from '@ckeditor/ckeditor5-page-break';
 import PageBreakCommand from '@ckeditor/ckeditor5-page-break/src/pagebreakcommand';
 
@@ -8,12 +8,12 @@ const editor = new MyEditor();
 PageBreak.requires.forEach(Plugin => {
     (['Widget', 'PageBreakUI', 'PageBreakEditing'] as const).forEach(value => {
         Plugin.pluginName === value;
-        // $ExpectError
+        // @ts-expect-error
         Plugin.pluginName === 'foo';
     });
     new Plugin(editor).init();
 });
-// $ExpectError
+// @ts-expect-error
 PageBreak.requires.length === 9;
 new PageBreak(editor);
 
@@ -31,3 +31,6 @@ editor.plugins.get('PageBreakUI');
 
 // $ExpectType PageBreakEditing
 editor.plugins.get('PageBreakEditing');
+
+// $ExpectType PageBreakCommand | undefined
+editor.commands.get('PageBreakCommand');

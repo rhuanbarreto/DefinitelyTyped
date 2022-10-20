@@ -11,6 +11,8 @@ import {
     InteractiveMap,
     Layer,
     LinearInterpolator,
+    Marker,
+    Popup,
     SVGOverlay,
     SVGRedrawOptions,
     ScaleControl,
@@ -145,6 +147,18 @@ class MyMap extends React.Component<{}, State> {
                             maxzoom={22}
                         ></Layer>
                     </Source>
+                    <Marker
+                        latitude={0}
+                        longitude={0}
+                    >
+                        <div>Marker text</div>
+                    </Marker>
+                    <Popup
+                        latitude={0}
+                        longitude={0}
+                    >
+                        <div>Popup text</div>
+                    </Popup>
                 </InteractiveMap>
                 <StaticMap
                     {...this.state.viewport}
@@ -172,16 +186,35 @@ class MyMap extends React.Component<{}, State> {
                 >
                     Jump to Null Point
                 </button>
+                <button
+                    onClick={() => {
+                        this.setState(prevState => ({
+                            viewport: {
+                                ...prevState.viewport,
+                                width: '100vw',
+                                height: '100vh',
+                            },
+                        }));
+                    }}
+                >
+                    Make map width and height of viewport
+                </button>
             </div>
         );
     }
 
-    private readonly setRefInteractive = (el: InteractiveMap) => {
+    private readonly setRefInteractive = (el: InteractiveMap | null) => {
+        if (el === null) {
+            return;
+        }
         this.map = el;
         this.mapboxMap = el.getMap();
     }
 
-    private readonly setRefStatic = (el: StaticMap) => {
+    private readonly setRefStatic = (el: StaticMap | null) => {
+        if (el === null) {
+            return;
+        }
         this.mapboxMap = el.getMap();
     }
 }

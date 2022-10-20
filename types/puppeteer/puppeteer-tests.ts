@@ -139,8 +139,10 @@ puppeteer.launch().then(async browser => {
     });
   });
 
+  const delayOptions: puppeteer.KeyboardTypeOptions = { delay: 100 };
+
   page.keyboard.type("Hello"); // Types instantly
-  page.keyboard.type("World", { delay: 100 }); // Types slower, like a user
+  page.keyboard.type("World", delayOptions); // Types slower, like a user
 
   const watchDog = page.waitForFunction("window.innerWidth < 100");
   page.setViewport({ width: 50, height: 50 });
@@ -163,6 +165,9 @@ puppeteer.launch().then(async browser => {
   ]) {
     await page.goto(currentURL);
   }
+
+  const keyboardPressOptions: puppeteer.KeyboardPressOptions = { text: 'c', delay: 100 };
+  page.keyboard.press('KeyC', keyboardPressOptions);
 
   page.keyboard.type("Hello World!");
   page.keyboard.press("ArrowLeft");
@@ -212,6 +217,25 @@ puppeteer.launch().then(async browser => {
   await page.goto("https://example.com");
   await page.screenshot({ path: "example.png" });
 
+  browser.close();
+})();
+
+// Example with launch headless options
+(async () => {
+  const browser = await puppeteer.launch({
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+    ],
+    headless: 'chrome',
+    defaultViewport: { width: 800, height: 600 },
+    handleSIGINT: true,
+    handleSIGHUP: true,
+    handleSIGTERM: true,
+  });
+  const page = await browser.newPage();
+  await page.goto("https://example.com");
+  await page.screenshot({ path: "example.png" });
   browser.close();
 })();
 

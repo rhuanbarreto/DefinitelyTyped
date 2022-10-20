@@ -1,9 +1,9 @@
-import inquirer = require("inquirer");
+import inquirer, { QuestionCollection } from 'inquirer';
 
 /**
  * Editor prompt example
  */
-const questions: inquirer.QuestionCollection = [
+const questions: QuestionCollection = [
     {
         type: 'editor',
         name: 'bio',
@@ -13,8 +13,8 @@ const questions: inquirer.QuestionCollection = [
                 return 'Must be at least 3 lines.';
             }
             return true;
-        }
-    }
+        },
+    },
 ];
 
 inquirer.prompt(questions).then(answers => {

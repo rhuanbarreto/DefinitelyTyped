@@ -17,26 +17,98 @@ declare namespace RecordRTC {
 
     /* tslint:disable:no-unnecessary-class */
     class MediaStreamRecorder {
-        constructor(mediaStream: any, config: any);
+        constructor(mediaStream: MediaStream, config: any);
+        // TODO: type
     }
     class StereoAudioRecorder {
-        constructor(mediaStream: any, config: any);
+        constructor(mediaStream: MediaStream, config?: Options);
+        /**
+         * Buffer-size for how frequently the audioprocess event is dispatched.
+         * @example
+         * recorder = new StereoAudioRecorder(mediaStream, {
+         *     bufferSize: 4096
+         * });
+         */
+        bufferSize: number;
+        /**
+         * The sample rate (in sample-frames per second) at which the AudioContext handles audio
+         *
+         * @example
+         * recorder = new StereoAudioRecorder(mediaStream, {
+         *     sampleRate: 44100
+         * });
+         */
+        sampleRate: number;
+        /**
+         * The recorded blob object.
+         */
+        blob: Blob;
+        /**
+         * The recorded buffer object.
+         */
+        buffer: ArrayBuffer;
+        /**
+         * The recorded data-view object.
+         */
+        view: any;
+        /**
+         * Desired Bits per sample * 1000
+         * @example
+         * var recorder = StereoAudioRecorder(mediaStream, {
+         *        desiredSampRate: 16 * 1000 // bits-per-sample * 1000
+         *       });
+         */
+        desiredSampRate: number;
+        /**
+         * This method resets currently recorded data.
+         */
+        clearRecordedData(): void;
+        /**
+         * This method pauses the recording process.
+         */
+        pause(): void;
+        /**
+         * This method records MediaStream.
+         */
+        record(): void;
+        /**
+         * This method resumes the recording process.
+         */
+        resume(): void;
+        /**
+         * This method stops recording MediaStream.
+         * @param callback - Callback function, that is used to pass recorded blob back to the callee.
+         * @example
+         * recorder.stop(function(blob) {
+         *     video.src = URL.createObjectURL(blob);
+         * });
+         */
+        stop(callback: (blob: Blob) => void): void;
+        /**
+         * This method is called on "onaudioprocess" event's first invocation.
+         */
+        onAudioProcessStarted(): void;
     }
     class CanvasRecorder {
-        constructor(htmlElement: any, config: any);
+        constructor(htmlElement: MediaStream, config: any);
+        // TODO: type
     }
     class WhammyRecorder {
-        constructor(mediaStream: any, config: any);
+        constructor(mediaStream: MediaStream, config: any);
+        // TODO: type
     }
     class GifRecorder {
-        constructor(mediaStream: any, config: any);
+        constructor(mediaStream: MediaStream, config: any);
+        // TODO: type
     }
     class WebAssemblyRecorder {
-        constructor(stream: any, config: any);
+        constructor(mediaStream: MediaStream, config: any);
+        // TODO: type
     }
 
     class MultiStreamsMixer {
         constructor(arrayOfMediaStreams: MediaStream[], elementClass: string);
+        // TODO: type
     }
 
     class MultiStreamRecorder {
@@ -127,16 +199,39 @@ declare namespace RecordRTC {
         getMixer(): MultiStreamsMixer;
     }
 
+    class RecordRTCPromisesHandler {
+        constructor(stream: MediaStream | HTMLCanvasElement | HTMLVideoElement | HTMLElement, options?: Options);
+        recordRTC: RecordRTC;
+        blob: Blob | null;
+        version: string;
+
+        startRecording(): Promise<void>;
+        stopRecording(): Promise<string>;
+        pauseRecording(): Promise<void>;
+        resumeRecording(): Promise<void>;
+        getDataURL(): Promise<string>;
+        getBlob(): Promise<Blob>;
+        getInternalRecorder(): Promise<Recorder>;
+        reset(): Promise<void>;
+        destroy(): Promise<void>;
+        getState(): Promise<State>;
+    }
+
+    type Recorder =
+        | MediaStreamRecorder
+        | StereoAudioRecorder
+        | WebAssemblyRecorder
+        | CanvasRecorder
+        | GifRecorder
+        | WhammyRecorder
+        | MultiStreamsMixer
+        | MultiStreamRecorder
+        | RecordRTCPromisesHandler;
+
     interface Options {
         type?: 'video' | 'audio' | 'canvas' | 'gif' | undefined;
 
-        recorderType?:
-            | MediaStreamRecorder
-            | StereoAudioRecorder
-            | WebAssemblyRecorder
-            | CanvasRecorder
-            | GifRecorder
-            | WhammyRecorder | undefined;
+        recorderType?: Recorder | undefined;
 
         mimeType?:
             | 'audio/webm'
@@ -149,7 +244,8 @@ declare namespace RecordRTC {
             | 'video/x-matroska;codecs=avc1'
             | 'video/mpeg'
             | 'audio/wav'
-            | 'audio/ogg' | undefined;
+            | 'audio/ogg'
+            | undefined;
 
         disableLogs?: boolean | undefined;
 
@@ -184,10 +280,7 @@ declare namespace RecordRTC {
         video?: HTMLVideoElement | undefined;
 
         /** used by CanvasRecorder and WhammyRecorder */
-        canvas?: {
-            width: number;
-            height: number;
-        } | undefined;
+        canvas?: { width: number; height: number } | undefined;
 
         /** used by StereoAudioRecorder, the range is 22050 to 96000 (kHz). */
         sampleRate?: number | undefined;
@@ -210,6 +303,8 @@ declare namespace RecordRTC {
         /** used by MultiStreamRecorder - to access HTMLCanvasElement */
         elementClass?: string | undefined;
     }
+
+    type DiskStorageType = 'audioBlob' | 'videoBlob' | 'gifBlob';
 }
 
 declare class RecordRTC {
@@ -250,7 +345,7 @@ declare class RecordRTC {
     getDataURL(): string;
 
     /** returns internal recorder */
-    getInternalRecorder(): void;
+    getInternalRecorder(): RecordRTC.Recorder;
 
     /** @deprecated initialize the recorder */
     initRecorder(): void;
@@ -266,8 +361,6 @@ declare class RecordRTC {
 
     getTracks: (stream: MediaStream, kind: RecordRTC.MediaStreamKind) => MediaStreamTrack[];
 
-    getSeekableBlob: (inputBlob: Blob, cb: (outputBlob: Blob) => void) => void;
-
     /** @deprecated */
     setAdvertisementArray(webPImages: Array<{ image: string }>): void;
 
@@ -278,7 +371,7 @@ declare class RecordRTC {
     destroy(): void;
 
     /** get recorder's state */
-    getState(): string;
+    getState(): RecordRTC.State;
 
     /** recorder's state */
     readonly state: string;
@@ -309,7 +402,21 @@ declare class RecordRTC {
     static bytesToSize(size: number): string;
 
     /** invokes the browser's Save-As dialog */
-    static invokeSaveAsDialog(file: Blob | File, fileName: string): void;
+    static invokeSaveAsDialog(file: Blob | File, fileName?: string): void;
+
+    static getSeekableBlob(inputBlob: Blob, cb: (outputBlob: Blob) => void): void;
+
+    /** returns true if running in an Electron environment */
+    static isElectron(): boolean;
+
+    /** DiskStorage is a standalone object used by RecordRTC to store recorded blobs in IndexedDB storage. */
+    static DiskStorage: {
+        init(): void;
+        Fetch(cb: (dataURL: string, type: RecordRTC.DiskStorageType) => void): void;
+        Store(data: { [K in RecordRTC.DiskStorageType]?: Blob }): void;
+        onError(error: Error): void;
+        dataStoreName: string;
+    };
 }
 
 export = RecordRTC;

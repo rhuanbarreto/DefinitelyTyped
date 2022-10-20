@@ -1,6 +1,19 @@
-import OpenSeadragon, { Viewport, Drawer, MouseTracker, IIIFTileSource } from 'openseadragon';
+import OpenSeadragon, { Viewport, Drawer, MouseTracker, IIIFTileSource, Button, ControlAnchor, PreprocessEventHandler } from 'openseadragon';
+
+// @ts-expect-error
+OpenSeadragon.setString('abc', 123);
 
 const viewer = OpenSeadragon({ id: 'viewerid' });
+
+// @ts-expect-error
+viewer.addHandler('canvas-click', ({ fullScreen }) => {
+    console.log(fullScreen);
+});
+
+const preProcessHandler: PreprocessEventHandler = ({ eventType }) => {
+    // @ts-expect-error
+    console.log(eventType === 'open');
+};
 
 viewer.addHandler('tile-loaded', event => {
     console.log(event.eventSource);
@@ -13,6 +26,12 @@ viewer.addHandler('full-screen', event => {
 viewer.addSimpleImage({ url: '2003rosen1799/0001q.jpg' });
 
 viewer.addTiledImage({ tileSource: '2003rosen1799/0001q.jpg' });
+
+const button = new Button({});
+
+viewer.addControl(button.element, {
+    anchor: ControlAnchor.TOP_LEFT,
+});
 
 const viewport = new Viewport({ margins: {} });
 

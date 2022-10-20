@@ -1,7 +1,6 @@
 // Type definitions for YouTube
 // Project: https://developers.google.com/youtube/
 // Definitions by: Ian Obermiller <http://ianobermiller.com>,
-//                 Josh Goldberg <https://github.com/JoshuaKGoldberg>
 //                 Eliot Fallon <https://github.com/eliotfallon213>
 //                 Terry Mun <https://github.com/terrymun>
 //                 Paul Hobbel <https://github.com/paulhobbel>
@@ -685,9 +684,9 @@ declare namespace YT
          */
         index?: number | undefined;
     }
-    
+
     /**
-     * The spherical video config object, including information about the 
+     * The spherical video config object, including information about the
      * viewport headings and zoom level.
      */
     export interface SphericalProperties {
@@ -709,7 +708,7 @@ declare namespace YT
          * @param container   DOM element to insert the player's <iframe>.
          * @param options   Player options.
          */
-        constructor(elt: HTMLElement, options: PlayerOptions);
+        constructor(elt: HTMLElement, options?: PlayerOptions);
 
         /**
          * Initializes a new instance of the Player class.
@@ -717,7 +716,7 @@ declare namespace YT
          * @param id   ID of the DOM element to insert the player's <iframe>.
          * @param options   Player options.
          */
-        constructor(id: string, options: PlayerOptions);
+        constructor(id: string, options?: PlayerOptions);
 
         /**
          * Queues a video by ID.
@@ -964,7 +963,7 @@ declare namespace YT
          * @returns YouTube.com URL for the currently loaded/playing video.
          */
         getVideoUrl(): string;
-        
+
         /**
          * @returns The spherical video config object, with information about the viewport
          * headings and zoom level.
@@ -1008,7 +1007,7 @@ declare namespace YT
          * @param listener   Handler for the event.
          */
         removeEventListener<TEvent extends PlayerEvent>(eventName: keyof Events, listener: (event: TEvent) => void): void;
-        
+
         /**
          * @returns The DOM node for the embedded <iframe>.
          */

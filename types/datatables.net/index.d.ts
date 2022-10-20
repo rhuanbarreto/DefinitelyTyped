@@ -471,7 +471,7 @@ declare namespace DataTables {
          *
          * @param fn Callback function which is called for each item in the API instance result set. The callback is called with three parameters
          */
-        each(fn: ((value: any, index: number, dt: Api) => void)): Api;
+        each(fn: ((value: any, index?: number, dt?: Api) => void)): Api;
 
         /**
          * Reduce an Api instance to a single context and result set.
@@ -902,10 +902,10 @@ declare namespace DataTables {
         /**
          * Select a row found by a row selector
          *
-         * @param rowSelector Row selector.
+         * @param rowSelector Row selector. If undefined returns the first row in the DataTable.
          * @param Option used to specify how the cells should be ordered, and if paging or filtering in the table should be taken into account.
          */
-        (rowSelector: any, modifier?: ObjectSelectorModifier): RowMethods;
+        (rowSelector?: any, modifier?: ObjectSelectorModifier): RowMethods;
 
         /**
          * Add a new row to the table using the given data
@@ -956,6 +956,16 @@ declare namespace DataTables {
          * Delete the selected row from the DataTable.
          */
         remove(): Node;
+
+        /**
+         * Selects this row.
+         */
+        select(): Api;
+
+        /**
+         * Deselects this row.
+         */
+        deselect(): Api;
     }
 
     interface RowsMethodsModel {
@@ -969,10 +979,10 @@ declare namespace DataTables {
         /**
          * Select rows found by a row selector
          *
-         * @param cellSelector Row selector.
+         * @param cellSelector Row selector. If undefined returns every row in the DataTable.
          * @param Option used to specify how the cells should be ordered, and if paging or filtering in the table should be taken into account.
          */
-        (rowSelector: any, modifier?: ObjectSelectorModifier): RowsMethods;
+        (rowSelector?: any, modifier?: ObjectSelectorModifier): RowsMethods;
 
         /**
          * Add new rows to the table using the data given
@@ -1020,6 +1030,16 @@ declare namespace DataTables {
          * Delete the selected rows from the DataTable.
          */
         remove(): Api;
+
+        /**
+         * Selects the given rows.
+         */
+        select(): Api;
+
+        /**
+         * Deselects the given rows.
+         */
+        deselect(): Api;
     }
     //#endregion "row-methods"
 
@@ -1268,7 +1288,7 @@ declare namespace DataTables {
         /**
          * Vertical scrolling. Since: 1.10 Exp: "200px"
          */
-        scrollY?: string | undefined;
+        scrollY?: number | string | undefined;
 
         /**
          * Feature control search (filtering) abilities Since: 1.10
@@ -1386,7 +1406,7 @@ declare namespace DataTables {
         /**
          * Data property name that DataTables will use to set <tr> element DOM IDs. Since: 1.10.8
          */
-        rowId?: string | undefined;
+        rowId?: string | ((data: any) => string) | undefined;
 
         /**
          * Allow the table to reduce in height when a limited number of rows are shown. Since: 1.10
@@ -1745,7 +1765,7 @@ declare namespace DataTables {
 
     //#region "callback-functions"
 
-    type FunctionCreateRow = (row: Node, data: any[] | object, dataIndex: number) => void;
+    type FunctionCreateRow = (row: Node, data: any[] | object, dataIndex: number, cells: Node[]) => void;
 
     type FunctionDrawCallback = (settings: SettingsLegacy) => void;
 

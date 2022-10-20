@@ -57,7 +57,9 @@ declare namespace Strategy {
         locale: string;
         mfa_enabled: boolean;
         flags: number;
-        avatar: string;
+        banner: string | null;
+        accent_color: number | null;
+        avatar: string | null;
         discriminator: string;
         verified: boolean;
         fetchedAt: string;
@@ -78,9 +80,10 @@ declare namespace Strategy {
     interface GuildInfo {
         owner: boolean;
         permissions: number;
-        icon: string;
+        icon: string | null;
         id: string;
         name: string;
+        features?: string[] | undefined;
     }
 }
 

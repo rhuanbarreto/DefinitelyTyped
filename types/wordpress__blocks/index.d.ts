@@ -1,13 +1,15 @@
-// Type definitions for @wordpress/blocks 9.0
+// Type definitions for @wordpress/blocks 11.0
 // Project: https://github.com/WordPress/gutenberg/tree/master/packages/blocks/README.md
 // Definitions by: Derek Sifford <https://github.com/dsifford>
 //                 Jon Surrell <https://github.com/sirreal>
 //                 Dennis Snell <https://github.com/dmsnell>
+//                 Tomasz Tunik <https://github.com/tomasztunik>
+//                 Lucio Giannotta <https://github.com/sunyatasattva>
+//                 Bas Tolen <https://github.com/bastolen>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
 // TypeScript Version: 3.6
 
 import { Dashicon } from '@wordpress/components';
-import { dispatch, select } from '@wordpress/data';
 import { ComponentType, ReactElement } from 'react';
 
 export * from './api';
@@ -17,6 +19,10 @@ declare module '@wordpress/data' {
     function dispatch(key: 'core/blocks'): typeof import('./store/actions');
     function select(key: 'core/blocks'): typeof import('./store/selectors');
 }
+
+export type AxialDirection = 'horizontal' | 'vertical';
+
+export type CSSDirection = 'top' | 'right' | 'bottom' | 'left';
 
 export type BlockAlignment = 'left' | 'center' | 'right' | 'wide' | 'full';
 
@@ -46,7 +52,106 @@ export interface BlockStyle {
     readonly isDefault?: boolean | undefined;
 }
 
+export interface ColorProps {
+    /**
+     * This property adds UI controls which allow the user to apply
+     * a solid background color to a block.
+     *
+     * When the block declares support for `color.background`,
+     * the attributes of a block will include two new entries:
+     * `backgroundColor` and `style`.
+     *
+     * @defaultValue true
+     */
+    background: boolean;
+    /**
+     * This property adds UI controls which allow the user to apply
+     * a gradient background to a block.
+     *
+     * When the block declares support for `color.background`,
+     * the attributes of a block will include two new entries:
+     * `gradient` and `style`.
+     *
+     * @defaultValue false
+     */
+    gradients: boolean;
+    /**
+     * This property adds block controls which allow the user
+     * to set link color in a block, link color is disabled by default.
+     *
+     * @defaultValue false
+     */
+    link: boolean;
+    /**
+     * This property adds block controls which allow the user
+     * to set text color in a block.
+     *
+     * @defaultValue true
+     */
+    text: boolean;
+}
+
+export interface TypographyProps {
+    /**
+     * This value signals that a block supports the font-size
+     * CSS style property. When it does, the block editor will
+     * show an UI control for the user to set its value.
+     *
+     * The values shown in this control are the ones declared
+     * by the theme via the editor-font-sizes theme support,
+     * or the default ones if none are provided.
+     *
+     * @defaultValue false
+     * @see {@link https://developer.wordpress.org/block-editor/how-to-guides/themes/theme-support/#block-font-sizes}
+     */
+    fontSize: boolean;
+    /**
+     * This value signals that a block supports the line-height
+     * CSS style property. When it does, the block editor will
+     * show an UI control for the user to set its value if the
+     * theme declares support.
+     *
+     * @defaultValue false
+     * @see {@link https://developer.wordpress.org/block-editor/how-to-guides/themes/theme-support/#supporting-custom-line-heights}
+     */
+    lineHeight: boolean;
+}
+
+export interface SpacingProps {
+    blockGap: boolean | AxialDirection[];
+    /**
+     * Enable margin control UI for all or specified element directions
+     *
+     * @defaultValue false
+     */
+    margin: boolean | CSSDirection[];
+    /**
+     * Enable padding control UI for all or specified element directions
+     *
+     * @defaultValue false
+     */
+    padding: boolean | CSSDirection[];
+}
+
+/**
+ * Internal type for the innerBlocks property inside of the example
+ *
+ * @internal
+ * @see Block.example
+ * @see {@link https://github.com/DefinitelyTyped/DefinitelyTyped/pull/55245#discussion_r692208988}
+ */
+type BlockExampleInnerBlock = Partial<Block> &
+    Pick<Block, 'name' | 'attributes'> & {
+        innerBlocks?: ReadonlyArray<BlockExampleInnerBlock>;
+    };
+
 export interface Block<T extends Record<string, any> = {}> {
+    /**
+     * The version of the Block API used by the block.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#api-version}
+     */
+    readonly apiVersion?: number;
     /**
      * Attributes for the block.
      */
@@ -71,6 +176,26 @@ export interface Block<T extends Record<string, any> = {}> {
      */
     readonly edit?: ComponentType<BlockEditProps<T>> | undefined;
     /**
+     * Block type editor script definition.
+     * It will only be enqueued in the context of the editor.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#editor-script}
+     */
+    readonly editorScript?: string;
+    /**
+     * Block type editor style definition.
+     * It will only be enqueued in the context of the editor.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#editor-style}
+     */
+    readonly editorStyle?: string;
+    /**
+     * It provides structured example data for the block.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#example}
+     */
+    readonly example?: Readonly<Partial<Block> & { innerBlocks?: ReadonlyArray<BlockExampleInnerBlock> }>;
+    /**
      * Icon for the block.
      */
     readonly icon: BlockIconNormalized;
@@ -84,6 +209,14 @@ export interface Block<T extends Record<string, any> = {}> {
      */
     readonly parent?: readonly string[] | undefined;
     /**
+     * Context provided for available access by descendants of blocks of this
+     * type, in the form of an object which maps a context name to one of the
+     * block’s own attribute.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#provides-context}
+     */
+    readonly providesContext?: Record<string, keyof T>;
+    /**
      * This is set internally when registering the type.
      */
     readonly name: string;
@@ -91,6 +224,21 @@ export interface Block<T extends Record<string, any> = {}> {
      * Component to render on the frontend.
      */
     readonly save: ComponentType<BlockSaveProps<T>>;
+    /**
+     * Block type frontend script definition.
+     * It will be enqueued both in the editor and when viewing the content on
+     * the front of the site.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#script}
+     */
+    readonly script?: string;
+    /**
+     * Block type editor style definition.
+     * It will only be enqueued in the context of the editor.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#style}
+     */
+    readonly style?: string;
     /**
      * Block styles.
      *
@@ -102,6 +250,12 @@ export interface Block<T extends Record<string, any> = {}> {
      */
     readonly supports?: BlockSupports | undefined;
     /**
+     * The gettext text domain of the plugin/block.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#text-domain}
+     */
+    readonly textdomain?: string;
+    /**
      * This is the display title for your block, which can be translated
      * with our translation functions.
      */
@@ -109,16 +263,31 @@ export interface Block<T extends Record<string, any> = {}> {
     /**
      * Block transformations.
      */
-    readonly transforms?: {
-        /**
-         * Transforms from another block type to this block type.
-         */
-        readonly from?: ReadonlyArray<Transform<T>> | undefined;
-        /**
-         * Transforms from this block type to another block type.
-         */
-        readonly to?: readonly Transform[] | undefined;
-    } | undefined;
+    readonly transforms?:
+        | {
+              /**
+               * Transforms from another block type to this block type.
+               */
+              readonly from?: ReadonlyArray<Transform<T>> | undefined;
+              /**
+               * Transforms from this block type to another block type.
+               */
+              readonly to?: readonly Transform[] | undefined;
+          }
+        | undefined;
+    /**
+     * Array of the names of context values to inherit from an ancestor
+     * provider.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#context}
+     */
+    readonly usesContext?: string[];
+    /**
+     * The current version number of the block, such as 1.0 or 1.0.3.
+     *
+     * @see {@link https://developer.wordpress.org/block-editor/reference-guides/block-api/block-metadata/#version}
+     */
+    readonly version?: string;
     /**
      * Sets attributes on the topmost parent element of the current block.
      */
@@ -163,8 +332,12 @@ export interface BlockInstance<T extends Record<string, any> = { [k: string]: an
     readonly originalContent?: string | undefined;
 }
 
-export interface BlockDeprecation<T extends Record<string, any>>
-    extends Pick<Block<T>, 'attributes' | 'save' | 'supports'> {
+export interface BlockDeprecation<
+    // The new block attribute types.
+    N extends Record<string, any>,
+    // The old block attribute types.
+    O extends Record<string, any> = Record<string, any>,
+> extends Pick<Block<O>, 'attributes' | 'save' | 'supports'> {
     /**
      * A function which, given the attributes and inner blocks of the
      * parsed block, returns true if the deprecation can handle the block
@@ -178,8 +351,7 @@ export interface BlockDeprecation<T extends Record<string, any>>
      * expected to return either the new attributes or a tuple array of
      * [attributes, innerBlocks] compatible with the block.
      */
-    migrate?(attributes: Record<string, any>): T;
-    migrate?(attributes: Record<string, any>, innerBlocks: BlockInstance[]): [T, BlockInstance[]];
+    migrate?(attributes: O, innerBlocks: BlockInstance[]): N | [N, BlockInstance[]];
 }
 
 //
@@ -208,6 +380,16 @@ export interface BlockSupports {
      * @defaultValue false
      */
     readonly anchor?: boolean | undefined;
+    /**
+     * This value signals that a block supports some of the properties
+     * related to color. When it does, the block editor will show
+     * UI controls for the user to set their values.
+     *
+     * @note The `background` and `text` keys have a default value
+     * of `true`, so if the color property is present they’ll also
+     * be considered enabled.
+     */
+    readonly color?: Partial<ColorProps> | undefined;
     /**
      * This property adds a field to define a custom className for the
      * block's wrapper.
@@ -250,6 +432,28 @@ export interface BlockSupports {
      * @defaultValue true
      */
     readonly reusable?: boolean | undefined;
+    /**
+     * This value signals that a block supports some of the CSS style
+     * properties related to spacing.
+     *
+     * When the block declares support for a specific spacing property,
+     * the attributes definition is extended to include the `style` attribute.
+     */
+    readonly spacing?: Partial<SpacingProps> | undefined;
+    /**
+     * A block may want to disable the ability to toggle the lock state.
+     * It can be locked/unlocked by a user from the block “Options”
+     * dropdown by default. To disable this behavior, set `lock` to `false`.
+     *
+     * @defaultValue true
+     */
+    readonly lock?: boolean | undefined;
+    /**
+     * A block may want to disable the ability to toggle the lock state.
+     * It can be locked/unlocked by a user from the block “Options”
+     * dropdown by default. To disable this behavior, set `lock` to `false`.
+     */
+    readonly typography?: Partial<TypographyProps> | undefined;
 }
 
 //
@@ -273,7 +477,8 @@ export namespace AttributeSource {
         | {
               type: 'string';
               default?: string | undefined;
-          });
+          }
+    );
 
     interface Children {
         source: 'children';
@@ -313,29 +518,31 @@ export namespace AttributeSource {
         default?: string | undefined;
     }
 
-    type None = {
-        source?: never | undefined;
-    } & (
-        | {
-              type: 'array';
-              default?: any[] | undefined;
-          }
-        | {
-              type: 'object';
-              default?: object | undefined;
-          }
-        | {
-              type: 'boolean';
-              default?: boolean | undefined;
-          }
-        | {
-              type: 'number';
-              default?: number | undefined;
-          }
-        | {
-              type: 'string';
-              default?: string | undefined;
-          })
+    type None =
+        | ({
+              source?: never | undefined;
+          } & (
+              | {
+                    type: 'array';
+                    default?: any[] | undefined;
+                }
+              | {
+                    type: 'object';
+                    default?: object | undefined;
+                }
+              | {
+                    type: 'boolean';
+                    default?: boolean | undefined;
+                }
+              | {
+                    type: 'number';
+                    default?: number | undefined;
+                }
+              | {
+                    type: 'string';
+                    default?: string | undefined;
+                }
+          ))
         | 'array'
         | 'object'
         | 'boolean'
@@ -423,3 +630,29 @@ export type Transform<T extends Record<string, any> = Record<string, any>> =
     | TransformPrefix<T>
     | TransformRaw<T>
     | TransformShortcode<T>;
+
+export type BlockAttributes = Record<string, any>;
+
+export type InnerBlockTemplate = [string, BlockAttributes?, InnerBlockTemplate[]?];
+
+export type BlockVariationScope = 'block' | 'inserter' | 'transform';
+
+export interface BlockVariation<Attributes extends BlockAttributes = BlockAttributes> {
+    name: string;
+    title: string;
+    description?: string;
+    category?: string;
+    icon?: BlockIcon;
+    isDefault?: boolean;
+    attributes?: Attributes;
+    innerBlocks?: BlockInstance | InnerBlockTemplate[];
+    example?:
+        | BlockExampleInnerBlock
+        | {
+              attributes: Attributes;
+              innerBlocks?: InnerBlockTemplate[];
+          };
+    scope?: BlockVariationScope[];
+    keywords?: string[];
+    isActive?: (blockAttributes: Attributes, variationAttributes: Attributes) => boolean | string[];
+}

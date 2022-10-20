@@ -72,7 +72,9 @@ export class Interval {
      *
      * @param o
      */
-    static isInterval(o: object): o is Interval;
+    static isInterval(o: unknown): o is Interval;
+
+    private constructor(config: unknown);
 
     /**
      * Returns the start of the Interval

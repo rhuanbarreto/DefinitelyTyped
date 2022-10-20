@@ -1,27 +1,28 @@
-import { ReaderFragment } from '../util/ReaderNode';
-import { Variables, Disposable, DataID, CacheConfig, FetchPolicy, RenderPolicy } from '../util/RelayRuntimeTypes';
-import { ConcreteRequest, RequestParameters } from '../util/RelayConcreteNode';
-import { RequestIdentifier } from '../util/getRequestIdentifier';
+import { MutationParameters } from '../mutations/commitMutation';
 import {
-    NormalizationSelectableNode,
-    NormalizationSplitOperation,
-    NormalizationScalarField,
-    NormalizationLinkedField,
-} from '../util/NormalizationNode';
-import {
-    PayloadData,
-    Network,
-    UploadableMap,
-    PayloadError,
     GraphQLResponse,
+    Network,
+    PayloadData,
+    PayloadError,
     ReactFlightServerTree,
+    UploadableMap,
 } from '../network/RelayNetworkTypes';
 import { RelayObservable } from '../network/RelayObservable';
+import { RequestIdentifier } from '../util/getRequestIdentifier';
+import {
+    NormalizationLinkedField,
+    NormalizationScalarField,
+    NormalizationSelectableNode,
+    NormalizationSplitOperation,
+} from '../util/NormalizationNode';
+import { ReaderFragment } from '../util/ReaderNode';
+import { ConcreteRequest, RequestParameters } from '../util/RelayConcreteNode';
+import { CacheConfig, DataID, Disposable, FetchPolicy, RenderPolicy, Variables } from '../util/RelayRuntimeTypes';
+import { InvalidationState } from './RelayModernStore';
 import { RelayOperationTracker } from './RelayOperationTracker';
 import { RecordState } from './RelayRecordState';
-import { InvalidationState } from './RelayModernStore';
 
-export type FragmentReference = unknown;
+export type FragmentType = unknown;
 export type OperationTracker = RelayOperationTracker;
 
 /*
@@ -249,7 +250,7 @@ export interface Store {
      * internal record source. Subscribers are not immediately notified - this
      * occurs when `notify()` is called.
      */
-    publish(source: RecordSource, idsMarkedForInvalidation?: Set<DataID>): void;
+    publish(source: RecordSource, idsMarkedForInvalidation?: DataIDSet): void;
 
     /**
      * Ensure that all the records necessary to fulfill the given selector are
@@ -416,7 +417,24 @@ interface OperationDescriptor {
     readonly root: NormalizationSelector;
 }
 
-type LogEvent =
+export type LogEvent =
+    | Readonly<{
+          name: 'suspense.fragment';
+          data: unknown;
+          fragment: ReaderFragment;
+          isRelayHooks: boolean;
+          isMissingData: boolean;
+          isPromiseCached: boolean;
+          pendingOperations: ReadonlyArray<RequestDescriptor>;
+      }>
+    | Readonly<{
+          name: 'suspense.query';
+          fetchPolicy: string;
+          isPromiseCached: boolean;
+          operation: OperationDescriptor;
+          queryAvailability?: OperationAvailability | undefined;
+          renderPolicy: RenderPolicy;
+      }>
     | Readonly<{
           name: 'queryresource.fetch';
           /**
@@ -424,7 +442,7 @@ type LogEvent =
            */
           resourceID: number;
           operation: OperationDescriptor;
-          profilerContext: any;
+          profilerContext: unknown;
           fetchPolicy: FetchPolicy;
           renderPolicy: RenderPolicy;
           queryAvailability: OperationAvailability;
@@ -434,41 +452,71 @@ type LogEvent =
           name: 'queryresource.retain';
           resourceID: number;
           // value from ProfilerContext
-          profilerContext: any;
-      }>
-    | Readonly<{
-          name: 'execute.info';
-          transactionID: number;
-          info: any;
+          profilerContext: unknown;
       }>
     | Readonly<{
           name: 'network.info';
-          transactionID: number;
+          networkRequestId: number;
           info: unknown;
       }>
     | Readonly<{
           name: 'network.start';
-          transactionID: number;
+          networkRequestId: number;
           params: RequestParameters;
           variables: Variables;
+          cacheConfig: CacheConfig;
       }>
     | Readonly<{
           name: 'network.next';
-          transactionID: number;
+          networkRequestId: number;
           response: GraphQLResponse;
       }>
     | Readonly<{
           name: 'network.error';
-          transactionID: number;
+          networkRequestId: number;
           error: Error;
       }>
     | Readonly<{
           name: 'network.complete';
-          transactionID: number;
+          networkRequestId: number;
       }>
     | Readonly<{
           name: 'network.unsubscribe';
-          transactionID: number;
+          networkRequestId: number;
+      }>
+    | Readonly<{
+          name: 'execute.start';
+          executeId: number;
+          params: RequestParameters;
+          variables: Variables;
+          cacheConfig: CacheConfig;
+      }>
+    | Readonly<{
+          name: 'execute.next';
+          executeId: number;
+          response: GraphQLResponse;
+          duration: number;
+      }>
+    | Readonly<{
+          name: 'execute.async.module';
+          executeId: number;
+          operationName: string;
+          duration: number;
+      }>
+    | Readonly<{
+          name: 'execute.flight.payload_deserialize';
+          executeId: number;
+          operationName: string;
+          duration: number;
+      }>
+    | Readonly<{
+          name: 'execute.error';
+          executeId: number;
+          error: Error;
+      }>
+    | Readonly<{
+          name: 'execute.complete';
+          executeId: number;
       }>
     | Readonly<{
           name: 'store.publish';
@@ -483,19 +531,27 @@ type LogEvent =
       }>
     | Readonly<{
           name: 'store.gc';
-          references: Set<DataID>;
+          references: DataIDSet;
       }>
     | Readonly<{
           name: 'store.notify.start';
+          sourceOperation?: OperationDescriptor | undefined;
       }>
     | Readonly<{
           name: 'store.notify.complete';
-          updatedRecordIDs: UpdatedRecords;
-          invalidatedRecordIDs: Set<DataID>;
+          sourceOperation?: OperationDescriptor | undefined;
+          updatedRecordIDs: DataIDSet;
+          invalidatedRecordIDs: DataIDSet;
+      }>
+    | Readonly<{
+          name: 'store.notify.subscription';
+          sourceOperation?: OperationDescriptor | undefined;
+          snapshot: Snapshot;
+          nextSnapshot: Snapshot;
       }>
     | Readonly<{
           name: 'entrypoint.root.consume';
-          profilerContext: any;
+          profilerContext: unknown;
           rootModuleID: string;
       }>;
 
@@ -678,7 +734,7 @@ export interface FragmentPointer {
 export interface ModuleImportPointer {
     readonly __fragmentPropName: string | null | undefined;
     readonly __module_component: unknown;
-    readonly $fragmentRefs: unknown;
+    readonly $fragmentSpreads: unknown;
 }
 
 /**
@@ -690,12 +746,7 @@ export interface LoadingState {
     error?: Error | undefined;
 }
 
-/**
- * A map of records affected by an update operation.
- */
-export interface UpdatedRecords {
-    [dataID: string]: boolean;
-}
+export type DataIDSet = Set<DataID>;
 
 /**
  * A function that updates a store (via a proxy) given the results of a "handle"
@@ -822,10 +873,10 @@ export interface OptimisticUpdateRelayPayload {
     readonly updater: SelectorStoreUpdater | null | undefined;
 }
 
-export interface OptimisticResponseConfig {
+export interface OptimisticResponseConfig<TMutation extends MutationParameters = any> {
     readonly operation: OperationDescriptor;
     readonly response: PayloadData | null | undefined;
-    readonly updater: SelectorStoreUpdater | null | undefined;
+    readonly updater: SelectorStoreUpdater<TMutation> | null | undefined;
 }
 
 /**
@@ -862,8 +913,8 @@ export type MissingFieldHandler =
       };
 
 /**
- * A handler for events related to @required fields. Currently reports missing
- * fields with either `action: LOG` or `action: THROW`.
+ * A handler for events related to @required fields or Relay Resolvers. Currently reports missing
+ * fields with either `action: LOG` or `action: THROW` or when a Relay Resolver throws.
  */
 export type RequiredFieldLogger = (
     arg:
@@ -876,6 +927,12 @@ export type RequiredFieldLogger = (
               kind: 'missing_field.throw';
               owner: string;
               fieldPath: string;
+          }>
+        | Readonly<{
+              kind: 'relay_resolver.error';
+              owner: string;
+              fieldPath: string;
+              error: Error;
           }>,
 ) => void;
 
@@ -889,6 +946,17 @@ export interface RelayResponsePayload {
     readonly moduleImportPayloads: ModuleImportPayload[] | null | undefined;
     readonly source: MutableRecordSource;
     readonly isFinal: boolean;
+}
+
+/**
+ * Configuration on the executeMutation(...).
+ */
+export interface ExecuteMutationConfig<TMutation extends MutationParameters> {
+    operation: OperationDescriptor;
+    optimisticUpdater?: SelectorStoreUpdater<TMutation['response']> | null;
+    optimisticResponse?: { [key: string]: any } | null;
+    updater?: SelectorStoreUpdater<TMutation['response']> | null;
+    uploadables?: UploadableMap | null;
 }
 
 /**
@@ -952,3 +1020,36 @@ export interface ReactFlightReachableQuery {
 }
 
 export type ReactFlightPayloadDeserializer = (tree: ReactFlightServerTree) => ReactFlightClientResponse;
+
+interface FieldLocation {
+    path: string;
+    owner: string;
+}
+
+export type MissingRequiredFields =
+    | Readonly<{ action: 'THROW'; field: FieldLocation }>
+    | Readonly<{ action: 'LOG'; fields: FieldLocation[] }>;
+
+export interface RelayResolverError {
+    field: FieldLocation;
+    error: Error;
+}
+
+export type RelayResolverErrors = RelayResolverError[];
+
+/**
+ * The return type of calls to readUpdatableQuery_EXPERIMENTAL and
+ * readUpdatableFragment_EXPERIMENTAL.
+ */
+export interface UpdatableData<TData> {
+    readonly updatableData: TData;
+}
+
+/**
+ * A linked field where an updatable fragment is spread has the type
+ * HasUpdatableSpread.
+ * This type is expected by store.readUpdatableFragment_EXPERIMENTAL.
+ */
+export interface HasUpdatableSpread<TFragmentType> {
+    readonly $updatableFragmentSpreads: TFragmentType;
+}

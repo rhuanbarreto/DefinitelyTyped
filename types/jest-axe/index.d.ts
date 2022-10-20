@@ -1,16 +1,16 @@
 // Type definitions for jest-axe 3.5
 // Project: https://github.com/nickcolley/jest-axe
-// Definitions by: Josh Goldberg <https://github.com/JoshuaKGoldberg>
-//                 erbridge <https://github.com/erbridge>
+// Definitions by: erbridge <https://github.com/erbridge>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 3.8
+// Minimum TypeScript Version: 4.3
 
 /// <reference types="jest" />
 
-import { AxeResults, Result, RunOptions, Spec } from 'axe-core';
+import { AxeResults, ImpactValue, Result, RunOptions, Spec } from 'axe-core';
 
 export interface JestAxeConfigureOptions extends RunOptions {
     globalOptions?: Spec | undefined;
+    impactLevels?: ImpactValue[];
 }
 
 /**
@@ -78,5 +78,5 @@ declare global {
     }
 
     // axe-core depends on a global Node
-    interface Node {}
+    interface Node { }
 }

@@ -613,9 +613,8 @@ declare namespace mapkit {
         target: T;
     }
 
-    // prettier-ignore
-    interface MapEvents<T> {
-        // Map Display Events
+    // Map Display Events
+    interface MapDisplayEvents<T> {
         'region-change-start': EventBase<T>;
         'region-change-end': EventBase<T>;
         'rotation-start': EventBase<T>;
@@ -625,23 +624,34 @@ declare namespace mapkit {
         'zoom-start': EventBase<T>;
         'zoom-end': EventBase<T>;
         'map-type-change': EventBase<T>;
-
-        // Map Interaction Events
-        'single-tap': EventBase<T>;
-        'double-tap': EventBase<T>;
-        'long-press': EventBase<T>;
-
-        // Annotation Events
-        'select': EventBase<T> & { annotation?: Annotation | undefined; overlay?: Overlay | undefined };
-        'deselect': EventBase<T> & { annotation?: Annotation | undefined; overlay?: Overlay | undefined };
+    }
+    // Map Annotations Overlay Events
+    interface MapAnnotationOverlayEvents<T> {
+        select: EventBase<T> & { annotation?: Annotation | undefined; overlay?: Overlay | undefined };
+        deselect: EventBase<T> & { annotation?: Annotation | undefined; overlay?: Overlay | undefined };
         'drag-start': EventBase<T> & { annotation: Annotation };
-        'dragging': EventBase<T> & { annotation: Annotation; coordinate: Coordinate };
+        dragging: EventBase<T> & { annotation: Annotation; coordinate: Coordinate };
         'drag-end': EventBase<T> & { annotation: Annotation };
+    }
 
-        // User Location Events
+    // User Location Events
+    interface MapUserLocationEvents<T> {
         'user-location-change': EventBase<T> & { coordinate: Coordinate; timestamp: Date };
         'user-location-error': EventBase<T> & { code: number; message: string };
     }
+
+    // Map Interaction Events
+    interface MapInteractionEvents<T> {
+        'single-tap': EventBase<T>;
+        'double-tap': EventBase<T>;
+        'long-press': EventBase<T>;
+    }
+
+    // All map events
+    type MapEvents<T> = MapDisplayEvents<T> &
+        MapAnnotationOverlayEvents<T> &
+        MapUserLocationEvents<T> &
+        MapInteractionEvents<T>;
 
     /**
      * Options that determine map parameters used when showing items.
@@ -1254,13 +1264,7 @@ declare namespace mapkit {
         titleVisibility?: string | undefined;
     }
 
-    // prettier-ignore
-    type AnnotationEventType =
-      | 'select'
-      | 'deselect'
-      | 'drag-start'
-      | 'dragging'
-      | 'drag-end';
+    type AnnotationEventType = 'select' | 'deselect' | 'drag-start' | 'dragging' | 'drag-end';
 
     /**
      * An abstract base object that defines the methods and attributes for map overlays.
@@ -1604,7 +1608,7 @@ declare namespace mapkit {
         /**
          * The gradient to apply along the line.
          */
-        lineGradient: LineGradient;
+        lineGradient?: LineGradient | undefined;
     }
 
     /**
@@ -1834,12 +1838,18 @@ declare namespace mapkit {
          *
          * @param query A string that represents the user's search term in progress.
          * @param callback A callback function or delegate object.
-         * @param options Autocomplete takes the same options hash as search
+         * @param options With the options hash, you have the option to constrain
+         * the search to a desired area using the coordinate or region properties.
+         * A coordinate or region supplied here overrides the same property supplied
+         * to the `mapkit.Search` constructor. You also have the option to override
+         * the language provided to the seach constructor.
+         * For example, `{ language: ‘fr-CA‘ }` tells the server to send results
+         * localized to Canadian French.
          */
         autocomplete(
             query: string,
             callback: SearchDelegate | AutocompleteSearchCallback,
-            options?: SearchOptions,
+            options?: SearchAutocompleteOptions,
         ): void;
         /**
          * Cancels a search request using its request ID.
@@ -1882,7 +1892,7 @@ declare namespace mapkit {
         /**
          * A string that constrains search results to within the provided countries.
          */
-        limitToCountries?: boolean | undefined;
+        limitToCountries?: string | undefined;
         /**
          * A Boolean value that indicates whether the search results should include points of interest.
          */

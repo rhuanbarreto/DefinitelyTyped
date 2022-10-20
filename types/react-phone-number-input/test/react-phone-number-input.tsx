@@ -1,10 +1,10 @@
 import * as React from 'react';
 import PhoneInput, {
-    parsePhoneNumber,
-    PhoneNumber,
+    CountrySelectComponentProps,
     getCountries,
     getCountryCallingCode,
-    CountrySelectComponentProps,
+    parsePhoneNumber,
+    PhoneNumber,
 } from 'react-phone-number-input';
 
 const phoneNumber: PhoneNumber | undefined = parsePhoneNumber('+12025550112');
@@ -26,6 +26,9 @@ const test1 = (
         international={true}
         country={'US'}
         countrySelectProps={{ tabIndex: '-1' }}
+        onBlur={(ev: React.FocusEvent<HTMLInputElement>) => {
+            console.log(ev.currentTarget.value);
+        }}
     >
         <div>panel 1</div>
         <div>panel 2</div>
@@ -92,6 +95,22 @@ const test3 = (
         inputComponent={InputComponent}
         numberInputProps={{ type: 'tel' }}
         smartCaret={false}
-        flagComponent={(props: {country: string, flagUrl: string}) => <span>country: {props.country}, flagUrl: {props.flagUrl}</span>}
+        flagComponent={(props: { country: string; flagUrl: string }) => (
+            <span>
+                country: {props.country}, flagUrl: {props.flagUrl}
+            </span>
+        )}
+    />
+);
+
+const test4 = (
+    <PhoneInput
+        value="+12345678901"
+        onChange={(value: string) => {
+            console.log(value);
+        }}
+        international
+        countryCallingCodeEditable={false}
+        focusInputOnCountrySelection={true}
     />
 );

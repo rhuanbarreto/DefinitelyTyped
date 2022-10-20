@@ -6,7 +6,7 @@ const gridField = new GridField('name', 'type', null); // $ExpectType GridField
 
 grid.classDefManager; // $ExpectType ClassDefManager
 grid.classesToValidatePermissions; // $ExpectType any[]
-grid.groups; // $ExpectType any
+grid.groups; // $ExpectType FieldGroupSet
 grid.toolbar; // $ExpectType { visible: boolean; }
 grid.fields; // $ExpectType FieldList
 grid.parent; // $ExpectType any
@@ -116,3 +116,8 @@ grid.expand('nodeValue'); // $ExpectType void
 grid.colapse('nodeValue'); // $ExpectType void
 grid.toggleKeyVisibility(); // $ExpectType void
 grid.toggleFieldVisibility('field'); // $ExpectType void
+
+function testMajorVersions(prior: number, current: number): boolean {
+    return current > prior;
+}
+testMajorVersions(64, 65); // $ExpectType boolean

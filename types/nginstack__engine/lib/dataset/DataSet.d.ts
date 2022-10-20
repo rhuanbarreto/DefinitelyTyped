@@ -1,7 +1,7 @@
 export = DataSet;
-declare function DataSet(idoDB?: any): void;
+declare function DataSet(idoDB?: IdoDB): void;
 declare class DataSet {
-    constructor(idoDB?: any);
+    constructor(idoDB?: IdoDB);
     sqlStatement: string;
     createField(fieldName: string, fieldType: string, opt_fieldSize?: number): void;
     create(): void;
@@ -58,8 +58,8 @@ declare class DataSet {
     prior(): void;
     del(): void;
     close(): void;
-    clone(dataSource: DataSet, opt_options?: any): void;
-    copy(dataSource: DataSet): void;
+    clone(source: DataSet, opt_options?: any): void;
+    copy(source: DataSet): void;
     empty(): void;
     find(searchValues: any): boolean;
     findNearest(searchValues: any): void;
@@ -127,7 +127,7 @@ declare class DataSet {
         kind: string;
     };
     iterate(func: (arg0: DataSet) => any, thisObj?: any): void;
-    getDeltaInspector(): any;
+    getDeltaInspector(): DeltaInspector;
     updateAll(
         fieldNames: string[],
         values: any[] | DataSet,
@@ -171,14 +171,22 @@ declare namespace DataSet {
         File,
         MemoryStream,
         GetFieldOptions,
+        DeltaInspector,
+        IdoDB,
+        DataSetFieldType,
         ApplyUndoLogOptions,
         DataSetFieldDef,
     };
 }
+type IdoDB = import('../ido/IdoDB');
 declare function DataSetFieldDefs(): void;
 declare class DataSetFieldDefs {
     size: number;
-    add(defOrName: DataSetFieldDef | DataSetFieldDef[] | string, type?: any, size?: number): void;
+    add(
+        defOrName: DataSetFieldDef | DataSetFieldDef[] | string,
+        type?: DataSetFieldType,
+        size?: number
+    ): void;
     get(id: string | number): DataSetFieldDef;
     set(id: string | number, def: DataSetFieldDef): void;
     delete(id: string | number): boolean;
@@ -194,13 +202,15 @@ interface ApplyUndoLogOptions {
     startVersion: number | null;
     endVersion: number | null;
 }
+type DeltaInspector = import('./DeltaInspector');
 import DBKey = require('../dbkey/DBKey.js');
-declare function getIntegerDataType(): any;
-declare function setIntegerDataType(type: any): void;
+declare function getIntegerDataType(): DataSetFieldType;
+declare function setIntegerDataType(type: DataSetFieldType): void;
 declare function setStringOverflowMode(mode: string): void;
 declare function getStringOverflowMode(): string;
+type DataSetFieldType = import('./DataSetDataType').DataSetFieldType;
 interface DataSetFieldDef {
     name: string;
-    type: any;
+    type: DataSetFieldType;
     size: number;
 }

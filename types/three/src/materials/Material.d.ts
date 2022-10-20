@@ -11,10 +11,8 @@ import {
     Side,
     StencilFunc,
     StencilOp,
+    PixelFormat,
 } from '../constants';
-import { ColorRepresentation } from '../utils';
-import { Color } from '../math/Color';
-import { Texture } from '../textures/Texture';
 
 export interface MaterialParameters {
     alphaTest?: number | undefined;
@@ -34,7 +32,6 @@ export interface MaterialParameters {
     depthFunc?: DepthModes | undefined;
     depthTest?: boolean | undefined;
     depthWrite?: boolean | undefined;
-    fog?: boolean | undefined;
     name?: string | undefined;
     opacity?: number | undefined;
     polygonOffset?: boolean | undefined;
@@ -49,6 +46,7 @@ export interface MaterialParameters {
     transparent?: boolean | undefined;
     vertexColors?: boolean | undefined;
     visible?: boolean | undefined;
+    format?: PixelFormat | undefined;
     stencilWrite?: boolean | undefined;
     stencilFunc?: StencilFunc | undefined;
     stencilRef?: number | undefined;
@@ -172,12 +170,6 @@ export class Material extends EventDispatcher {
      * @default true
      */
     depthWrite: boolean;
-
-    /**
-     * Whether the material is affected by fog. Default is true.
-     * @default fog
-     */
-    fog: boolean;
 
     /**
      * Unique number of this material instance.
@@ -309,7 +301,7 @@ export class Material extends EventDispatcher {
      * If *null*, the value is opposite that of side, above.
      * @default null
      */
-    shadowSide: Side;
+    shadowSide: Side | null;
 
     /**
      * Defines whether this material is tone mapped according to the renderer's toneMapping setting.

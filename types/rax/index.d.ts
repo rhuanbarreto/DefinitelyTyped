@@ -36,7 +36,7 @@ interface SchedulerInteraction {
   timestamp: number;
 }
 
-// tslint:disable-next-line:export-just-namespace
+// eslint-disable-next-line export-just-namespace
 export = Rax;
 export as namespace Rax;
 
@@ -88,7 +88,7 @@ declare namespace Rax {
    * - Rax stateless functional components that forward a `ref` will give you the `ElementRef` of the forwarded
    *   to component.
    *
-   * `C` must be the type _of_ a Rax component so you need to use typeof as in ElementRef<typeof MyComponent>.
+   * `C` must be the type _of_ a Rax component so you need to use typeof as in `ElementRef<typeof MyComponent>`.
    */
   type ElementRef<
       C extends
@@ -330,6 +330,7 @@ declare namespace Rax {
 
   interface RenderOption {
     driver: any;
+    hydrate?: boolean;
   }
   export const render: Renderer;
 
@@ -632,6 +633,14 @@ declare namespace Rax {
     ? PropsWithoutRef<P> & RefAttributes<InstanceType<T>>
     : PropsWithRef<ComponentProps<T>>;
   type ComponentPropsWithoutRef<T extends ElementType> = PropsWithoutRef<ComponentProps<T>>;
+
+  type ComponentRef<T extends ElementType> = T extends NamedExoticComponent<
+      ComponentPropsWithoutRef<T> & RefAttributes<infer Method>
+  >
+      ? Method
+      : ComponentPropsWithRef<T> extends RefAttributes<infer Method>
+          ? Method
+          : never;
 
   // will show `Memo(${Component.displayName || Component.name})` in devtools by default,
   // but can be given its own specific name

@@ -62,3 +62,13 @@ cm.showHint({
     hint: CodeMirror.hint.fromList,
     words: ['hello', 'world'],
 });
+
+const hintOptions: CodeMirror.ShowHintOptions = { scrollMargin: 5 };
+
+// @ts-expect-error
+hintOptions.scrolMargn = 5;
+
+// @ts-expect-error
+hintOptions.scrollMargin = '5';
+
+CodeMirror(document.body, { hintOptions });

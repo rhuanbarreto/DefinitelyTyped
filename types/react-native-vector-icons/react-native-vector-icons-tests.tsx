@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { View, Text, TabBarIOS } from 'react-native';
+import { View, Text, TabBarIOS, PlatformColor, Platform } from 'react-native';
 import { createIconSet } from 'react-native-vector-icons';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
@@ -18,7 +18,6 @@ const CustomIcon = createIconSet(glyphMap, 'FontCustom', 'FontCustom.ttf');
 const CustomIconButton         = CustomIcon.Button;
 const CustomIconTabBarItem     = CustomIcon.TabBarItem;
 const CustomIconTabBarItemIOS  = CustomIcon.TabBarItemIOS;
-const CustomIconToolbarAndroid = CustomIcon.ToolbarAndroid;
 const CustomIcongetImageSource = CustomIcon.getImageSource;
 const CustomIcongetImageSourceSync = CustomIcon.getImageSourceSync;
 
@@ -48,6 +47,18 @@ class Example extends React.Component {
             Login with Facebook
           </Text>
         </FontAwesomeIcon.Button>
+
+        {/* FA5 Icon button with solid  */}
+        <FontAwesome5Icon.Button
+          backgroundColor="#3b5998"
+          name="facebook"
+          onPress={() => this.handleButton()}
+          solid
+        >
+          <Text style={{ fontFamily: 'Arial', fontSize: 15 }}>
+            Login with Facebook
+          </Text>
+        </FontAwesome5Icon.Button>
       </View>
     );
   }
@@ -118,3 +129,33 @@ class TestCustomIcon extends React.Component {
     );
   }
 }
+
+class OpaqueColorTest extends React.Component {
+  handleButton() {
+    console.log("You pressed me");
+  }
+
+  render() {
+    const opaqueColor = PlatformColor(Platform.OS === "ios" ? "systemBlue" : "?android:attr/colorBackground");
+
+    return (
+      <View>
+        {/* Normal Icon */}
+        <AntDesign size={10} color={opaqueColor} name="user" />
+        <MaterialIcon size={30} color={opaqueColor} name="exit" />
+        <FontAwesome5Icon size={10} color={opaqueColor} name="handshake" />
+        <FontAwesome5Icon size={10} color={opaqueColor} name="handshake" solid />
+        <FontAwesome5ProIcon size={10} color={opaqueColor} name="parachute-box" light={true} solid={false} />
+        <Fontisto color={opaqueColor} size={10} name="fontisto" />
+
+        {/* Icon button  */}
+        <FontAwesomeIcon.Button backgroundColor={opaqueColor} name="facebook" onPress={() => this.handleButton()}>
+          <Text style={{fontFamily: "Arial", fontSize: 15}}>Login with Facebook</Text>
+        </FontAwesomeIcon.Button>
+      </View>
+    );
+  }
+}
+
+// $ExpectType string
+MaterialIcon.getFontFamily();

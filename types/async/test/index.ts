@@ -12,6 +12,10 @@ declare var path: {
 function funcStringCbErrBoolean(v: string, cb: (err: Error, res: boolean) => void) {}
 function callback() { }
 
+let promiseString: Promise<string>;
+let promiseIterableString: Promise<Iterable<string>>;
+let promiseBoolean: Promise<boolean>;
+
 async.map(['file1', 'file2', 'file3'], fs.stat, (err: Error, results: fs.Stats[]) => { });
 async.mapSeries(['file1', 'file2', 'file3'], fs.stat, (err: Error, results: fs.Stats[]) => { });
 async.mapLimit(['file1', 'file2', 'file3'], 2, fs.stat, (err: Error, results: fs.Stats[]) => { });
@@ -72,30 +76,47 @@ function reducer(memo: any, item: any, callback: any) {
     process.nextTick(() => { callback(null, memo + item); });
 }
 
-async.reduce(numArray, 0, reducer, (err, result) => { });
+async.reduce(numArray, 0, reducer, (err, result) => { }); // $ExpectType void
+async.reduce<number, number>(numArray, 0, reducer); // $ExpectType Promise<number>
+async.reduce<number, string>(numArray, '0', reducer); // $ExpectType Promise<string>
 async.inject(numArray, 0, reducer, (err, result) => { });
 async.foldl(numArray, 0, reducer, (err, result) => { });
 async.reduceRight(numArray, 0, reducer, (err, result) => { });
 async.foldr(numArray, 0, reducer, (err, result) => { });
 
-async.detect(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err: Error, result: string) => { });
+async.detect(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err: Error, result: string) => { }); // $ExpectType void
+async.detect(['file1', 'file2', 'file3'], funcStringCbErrBoolean); // $ExpectType Promise<string>
 async.detectSeries(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err, result) => { });
 async.detectLimit(['file1', 'file2', 'file3'], 2, funcStringCbErrBoolean, (err, result) => { });
+promiseString = async.detectLimit(['file1', 'file2', 'file3'], 2, funcStringCbErrBoolean);
 
 async.sortBy(['file1', 'file2', 'file3'], (file, callback) => {
     fs.stat(file, (err, stats) => { callback(err, stats ? stats.mtime : -1); });
 }, (err, results) => { });
+promiseIterableString = async.sortBy(['file1', 'file2', 'file3'], (file, callback) => {
+    fs.stat(file, (err, stats) => { callback(err, stats ? stats.mtime : -1); });
+});
 
 async.some(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err: Error, result: boolean) => { });
 async.someLimit(['file1', 'file2', 'file3'], 2, funcStringCbErrBoolean, (err: Error, result: boolean) => { });
 async.any(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err: Error, result: boolean) => { });
 
 async.every(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err: Error, result: boolean) => { });
+promiseBoolean = async.every(['file1', 'file2', 'file3'], funcStringCbErrBoolean);
 async.everyLimit(['file1', 'file2', 'file3'], 2, funcStringCbErrBoolean, (err: Error, result: boolean) => { });
+promiseBoolean = async.everyLimit(['file1', 'file2', 'file3'], 2, funcStringCbErrBoolean);
 async.all(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err: Error, result: boolean) => { });
 
-async.concat(['dir1', 'dir2', 'dir3'], fs.readdir, (err, files) => { });
+async.concat(['dir1', 'dir2', 'dir3'], fs.readdir, (err, files) => { }); // $ExpectType void
+async.concat<fs.PathLike, string>(['dir1', 'dir2', 'dir3'], fs.readdir); // $ExpectType Promise<string[]>
 async.concatSeries(['dir1', 'dir2', 'dir3'], fs.readdir, (err, files) => { });
+async.concatLimit(['dir1', 'dir2', 'dir3'], 2, fs.readdir, (err, files) => { });
+async.concatLimit<string, string>(['dir1', 'dir2', 'dir3'], 2, fs.readdir); // $ExpectType Promise<string[]>
+
+async.groupBy(['file1', 'file2', 'file3'], funcStringCbErrBoolean, (err: Error, result: Record<string, string[]>) => { });
+let groups: Promise<Record<string, string[]>> = async.groupBy(['file1', 'file2', 'file3'], funcStringCbErrBoolean);
+async.groupByLimit(['file1', 'file2', 'file3'], 2, funcStringCbErrBoolean);
+groups = async.groupByLimit(['file1', 'file2', 'file3'], 2, funcStringCbErrBoolean);
 
 // Control Flow //
 
@@ -150,19 +171,16 @@ async.parallelLimit({
     (err, results) => { }
 );
 
-function whileFn(callback: any) {
+function whileFn(callback: (err: any, ...rest: any[]) => void) {
     setTimeout(() => callback(null, ++count), 1000);
 }
-
-function whileTest() { return count < 5; }
-function whilstTest(callback: (error: any, truth: boolean) => boolean) { return callback(null, count < 5); }
-function doWhileTest(count: number) { return count < 5; }
+function whileTest(callback: (err: any, truth: boolean) => void) { callback(null, count < 5); }
 
 let count = 0;
-async.whilst(whilstTest, whileFn, err => { });
-async.until(whileTest, whileFn, err => { });
-async.doWhilst(whileFn, doWhileTest, err => { });
-async.doUntil(whileFn, doWhileTest, err => { });
+async.whilst(whileTest, whileFn, (err: Error, res: number, res2: string) => { });
+async.until(whileTest, whileFn, (err: Error) => { });
+async.doWhilst(whileFn, whileTest, (err: Error) => { });
+async.doUntil(whileFn, whileTest, (err: Error) => { });
 
 async.during(testCallback => { testCallback(new Error(), false); }, callback => { callback(); }, error => { console.log(error); });
 async.doDuring(callback => { callback(); }, testCallback => { testCallback(new Error(), false); }, error => { console.log(error); });
@@ -293,8 +311,17 @@ cargo.push({ name: 'foo' }, (err: Error) => { console.log('finished processing f
 cargo.push({ name: 'bar' }, (err: Error) => { console.log('finished processing bar'); });
 cargo.push({ name: 'baz' }, (err: Error) => { console.log('finished processing baz'); });
 
+interface A {
+    get_data: any;
+    make_folder: any;
+    write_file: any;
+    email_link: any;
+}
+
 const filename = '';
-async.auto({
+
+// $ExpectType void
+async.auto<A>({
     get_data: (callback: AsyncResultCallback<any>) => { },
     make_folder: (callback: AsyncResultCallback<any>) => { },
 
@@ -305,9 +332,24 @@ async.auto({
 
     // arrays with different types are not accepted by TypeScript.
     email_link: ['write_file', ((callback: AsyncResultCallback<any>, results: any) => { }) as any]
+}, (err, results) => { console.log('finished auto'); });
+
+// $ExpectType Promise<A>
+async.auto<A>({
+    get_data: async () => { },
+    make_folder: async () => { },
+
+    // arrays with different types are not accepted by TypeScript.
+    write_file: ['get_data', 'make_folder', (async () => {
+        return filename;
+    }) as any],
+
+    // arrays with different types are not accepted by TypeScript.
+    email_link: ['write_file', (async (results: any) => { }) as any]
 });
 
-async.auto({
+// $ExpectType void
+async.auto<A>({
         get_data: (callback: AsyncResultCallback<any>) => { },
         make_folder: (callback: AsyncResultCallback<any>) => { },
 
@@ -320,13 +362,23 @@ async.auto({
     (err, results) => { console.log('finished auto'); }
 );
 
-interface A {
-    get_data: any;
-    make_folder: any;
-    write_file: any;
-    email_link: any;
-}
+// $ExpectType Promise<A>
+async.auto<A>({
+        get_data: async () => { },
+        make_folder: async () => { },
 
+        // arrays with different types are not accepted by TypeScript.
+        write_file: ['get_data', 'make_folder', (async () => {
+            return filename;
+        }) as any],
+
+        // arrays with different types are not accepted by TypeScript.
+        email_link: ['write_file', (async (results: any) => { }) as any]
+    },
+    1
+);
+
+// $ExpectType void
 async.auto<A>({
         get_data: (callback: AsyncResultCallback<any>) => { },
         make_folder: (callback: AsyncResultCallback<any>) => { },
@@ -341,8 +393,10 @@ async.auto<A>({
     (err, results) => { console.log('finished auto'); }
 );
 
-async.retry(); // $ExpectError
-async.retry(3); // $ExpectError
+// @ts-expect-error
+async.retry();
+// @ts-expect-error
+async.retry(3);
 
 async.retry(async () => 2); // $ExpectType Promise<number>
 async.retry<number>(async () => 2); // $ExpectType Promise<number>
@@ -401,6 +455,9 @@ call_order.push('one');
 
 const slow_fn = (name: string, callback: any) => { callback(null, 123); };
 const fn = async.memoize(slow_fn);
+
+async.tryEach([() => 'file1', () => 'file2'], (err: Error, result: string) => { });
+promiseString = async.tryEach([() => 'file1', () => 'file2']);
 
 fn('some name', () => { });
 async.unmemoize(fn);
@@ -510,6 +567,24 @@ async.map<number, string>(
     },
     (err: Error, results: string[]) => { console.log("async.map: done with results", results); }
 );
+
+async function promiseTest() {
+    const promiseMap = await async.map<number, string>(
+        { a: 1, b: 2, c: 3 },
+        async (val: number) => {
+            return new Promise<string>((resolve, reject) => {
+                setTimeout(
+                    () => {
+                        console.log(`async.map: ${val}`);
+                        resolve(val.toString());
+                    },
+                    500);
+            });
+        }
+    );
+    console.log("async.map promise: done with results", promiseMap);
+}
+promiseTest();
 
 async.mapSeries<number, string>(
     { a: 1, b: 2, c: 3 },

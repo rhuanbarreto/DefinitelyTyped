@@ -22,3 +22,31 @@ editor.plugins.get('HorizontalLineEditing');
 
 // $ExpectType HorizontalLineUI
 editor.plugins.get('HorizontalLineUI');
+
+// $ExpectType EditorUI
+editor.plugins.get('HorizontalLineUI').editor.ui;
+
+// $ExpectType HorizontalLineCommand | undefined
+editor.commands.get('horizontalLine');
+
+editor.commands.get('horizontalLine')?.execute();
+// @ts-expect-error
+editor.commands.get('horizontalLine')?.execute(true);
+
+editor.commands.get('horizontalLine')?.on(
+    'execute',
+    ev => {
+        // $ExpectType EventInfo<HorizontalLineCommand, "execute">
+        ev;
+    },
+    { priority: 'lowest' },
+);
+
+editor.commands.get('horizontalLine')?.off('execute', ev => {
+    // $ExpectType EventInfo<HorizontalLineCommand, "execute">
+    ev;
+});
+
+editor.commands.get('horizontalLine')?.fire('execute');
+// @ts-expect-error
+editor.commands.get('horizontalLine')?.fire('execute', true);

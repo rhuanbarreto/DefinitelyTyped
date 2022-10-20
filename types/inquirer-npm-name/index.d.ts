@@ -2,9 +2,9 @@
 // Project: https://github.com/SBoudrias/inquirer-npm-name
 // Definitions by: manuth <https://github.com/manuth>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
-// TypeScript Version: 3.3
+// TypeScript Version: 4.2
 
-import { Inquirer, Question } from "inquirer";
+import { Question, PromptFunction } from "inquirer";
 
-declare function askName(name: string | Question, inquirer: Inquirer): Promise<{ [key: string]: string }>;
+declare function askName(name: string | Question, inquirer: { prompt: PromptFunction }): Promise<{ [key: string]: string }>;
 export = askName;

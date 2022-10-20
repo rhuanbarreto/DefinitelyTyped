@@ -13,11 +13,12 @@ saxStream({
     lowercase: true,
     xmlns: true,
     trackPosition: true,
-    strictEntities: true
+    strictEntities: true,
+    noscript: true
 });
 
-// $ExpectError
+// @ts-expect-error
 saxStream({});
 
-// $ExpectError
+// @ts-expect-error
 saxStream();

@@ -20,14 +20,13 @@
 import {
     ChangeEvent,
     ComponentType,
+    CSSProperties,
     DependencyList,
     EffectCallback,
     MouseEvent,
     ReactElement,
-    ReactNode,
-    ReactText,
     ReactFragment,
-    CSSProperties,
+    ReactNode,
 } from 'react';
 
 export {};
@@ -166,8 +165,8 @@ export function useTable<D extends object = {}>(
  * NOTE: To use custom options, use "Interface Merging" to add the custom options
  */
 export type UseTableOptions<D extends object> = {
-    columns: Array<Column<D>>;
-    data: D[];
+    columns: ReadonlyArray<Column<D>>;
+    data: readonly D[];
 } & Partial<{
     initialState: Partial<TableState<D>>;
     stateReducer: (newState: TableState<D>, action: ActionType, previousState: TableState<D>, instance?: TableInstance<D>) => TableState<D>;
@@ -320,7 +319,9 @@ export type HeaderProps<D extends object> = TableInstance<D> & {
     column: ColumnInstance<D>;
 };
 
-export type FooterProps<D extends object> = TableInstance<D> & {};
+export type FooterProps<D extends object> = TableInstance<D> & {
+    column: ColumnInstance<D>;
+};
 
 export type CellProps<D extends object, V = any> = TableInstance<D> & {
     column: ColumnInstance<D>;
@@ -473,7 +474,7 @@ export interface UseFiltersColumnProps<D extends object> {
 export type FilterProps<D extends object> = HeaderProps<D>;
 export type FilterValue = any;
 export type Filters<D extends object> = Array<{ id: IdType<D>; value: FilterValue }>;
-export type FilterTypes<D extends object> = Record<string, FilterValue>;
+export type FilterTypes<D extends object> = Record<string, FilterType<D>>;
 
 export type DefaultFilterTypes =
     | 'text'
@@ -498,6 +499,14 @@ export function useFlexLayout<D extends object = {}>(hooks: Hooks<D>): void;
 
 export namespace useFlexLayout {
     const pluginName = 'useFlexLayout';
+}
+//#endregion
+
+//#region useGridLayout
+export function useGridLayout<D extends object = {}>(hooks: Hooks<D>): void;
+
+export namespace useGridLayout {
+    const pluginName = 'useGridLayout';
 }
 //#endregion
 
@@ -546,7 +555,11 @@ export namespace useGroupBy {
     const pluginName = 'useGroupBy';
 }
 
-export interface TableGroupByToggleProps {}
+export interface TableGroupByToggleProps {
+    title?: string | undefined;
+    style?: CSSProperties | undefined;
+    onClick?: ((e: MouseEvent) => void) | undefined;
+}
 
 export type UseGroupByOptions<D extends object> = Partial<{
     manualGroupBy: boolean;
@@ -668,6 +681,7 @@ export namespace useResizeColumns {
 
 export interface UseResizeColumnsOptions<D extends object> {
     disableResizing?: boolean | undefined;
+    autoResetResize?: boolean | undefined;
 }
 
 export interface UseResizeColumnsState<D extends object> {
@@ -786,7 +800,11 @@ export namespace useSortBy {
     const pluginName = 'useSortBy';
 }
 
-export interface TableSortByToggleProps {}
+export interface TableSortByToggleProps {
+    title?: string | undefined;
+    style?: CSSProperties | undefined;
+    onClick?: ((e: MouseEvent) => void)| undefined;
+}
 
 export type UseSortByOptions<D extends object> = Partial<{
     manualSortBy: boolean;
@@ -797,7 +815,7 @@ export type UseSortByOptions<D extends object> = Partial<{
     maxMultiSortColCount: number;
     disableSortRemove: boolean;
     disabledMultiRemove: boolean;
-    orderByFn: (rows: Array<Row<D>>, sortFns: Array<SortByFn<D>>, directions: boolean[]) => Array<Row<D>>;
+    orderByFn: (rows: Array<Row<D>>, sortFns: Array<OrderByFn<D>>, directions: boolean[]) => Array<Row<D>>;
     sortTypes: Record<string, SortByFn<D>>;
     autoResetSortBy?: boolean | undefined;
 }>;
@@ -835,6 +853,7 @@ export interface UseSortByColumnProps<D extends object> {
     isSortedDesc: boolean | undefined;
 }
 
+export type OrderByFn<D extends object> = (rowA: Row<D>, rowB: Row<D>) => number;
 export type SortByFn<D extends object> = (rowA: Row<D>, rowB: Row<D>, columnId: IdType<D>, desc?: boolean) => number;
 
 export type DefaultSortTypes = 'alphanumeric' | 'datetime' | 'basic' | 'string' | 'number';
@@ -856,7 +875,7 @@ export type StringKey<D> = Extract<keyof D, string>;
 export type IdType<D> = StringKey<D> | string;
 export type CellValue<V = any> = V;
 
-export type Renderer<Props> = ComponentType<Props> | ReactElement | ReactText | ReactFragment;
+export type Renderer<Props> = ComponentType<Props> | ReactElement | string | number | ReactFragment;
 
 export interface PluginHook<D extends object> {
     (hooks: Hooks<D>): void;
@@ -868,7 +887,7 @@ export type TableDispatch<A = any> = (action: A) => void;
 // utils
 export function defaultOrderByFn<D extends object = {}>(
     arr: Array<Row<D>>,
-    funcs: Array<SortByFn<D>>,
+    funcs: Array<OrderByFn<D>>,
     dirs: boolean[],
 ): Array<Row<D>>;
 
